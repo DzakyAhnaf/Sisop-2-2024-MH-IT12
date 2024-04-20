@@ -237,7 +237,7 @@ void killApps(struct App apps[], int numApps) {
     for (int i = 0; i < numApps; i++) {
         for (int j = 0; j < apps[i].numPid; j++) {
             printf("Killing process %d...\n", apps[i].pid[j]);
-            int result = kill(apps[i].pid[j]+1, SIGTERM);
+            int result = kill(apps[i].pid[j]+1, SIGTERM); // pid saya tambahkan 1 soalnya selalu beda 1 digit dari sistem
             if (result == 0) {
                 printf("Process %d terminated successfully\n", apps[i].pid[j]);
             } else {
@@ -258,7 +258,7 @@ void killAllpid(const char* filename) {
     while (fscanf(file, "%d", &pid) == 1) {
         if (pid > 0) {
             printf("Killing process %d...\n", pid);
-            int result = kill(pid + 1, SIGTERM);
+            int result = kill(pid + 1, SIGTERM); // pid saya tambahkan 1 soalnya selalu beda 1 digit dari sistem
             if (result == 0) {
                 printf("Process %d terminated successfully.\n", pid);
             } else {
@@ -280,7 +280,7 @@ void mergepid(const char* srcFilename1, const char* srcFilename2, const char* de
         return;
     }
 
-    FILE *dest = fopen(destFilename, "w"); // Open for writing to reset file content
+    FILE *dest = fopen(destFilename, "w"); 
     if (!dest) {
         perror("Failed to open destination file");
         fclose(src1);
@@ -289,16 +289,14 @@ void mergepid(const char* srcFilename1, const char* srcFilename2, const char* de
     }
 
     int pid, numApps;
-    // Skip the numApps line and read PIDs from the first file
-    fscanf(src1, "%d", &numApps);  // Skip the number of apps
+    fscanf(src1, "%d", &numApps);  // Skip numApps, langsung PID
     while (fscanf(src1, "%d", &pid) == 1) {
-        fprintf(dest, "%d\n", pid);
+        fprintf(dest, "%d\n", pid); //pindahin ke file dest
     }
 
-    // Skip the numApps line and read PIDs from the second file
-    fscanf(src2, "%d", &numApps);  // Skip the number of apps
+    fscanf(src2, "%d", &numApps);  // Skip numApps, langsung PID
     while (fscanf(src2, "%d", &pid) == 1) {
-        fprintf(dest, "%d\n", pid);
+        fprintf(dest, "%d\n", pid); //pindahin ke file dest
     }
 
     fclose(src1);
