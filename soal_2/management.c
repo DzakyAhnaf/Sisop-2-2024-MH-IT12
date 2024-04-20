@@ -39,31 +39,32 @@ void run_as_daemon() {
     close(STDERR_FILENO);
 }
 
-void download_and_extract() {
-    pid_t pid = fork();
+void downloadFile() {
+    pid_t pid_donlod = fork();
     int status;
 
-    if (pid == 0) { 
-        execl("/usr/bin/curl", "curl", "-L", "-o", "library.zip", "https://drive.google.com/uc?export=download&id=1rUIZmp10lXLtCIH3LAZJzRPeRks3Crup", NULL);
-    } else if (pid > 0) { 
-        waitpid(pid, &status, 0);
-        if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-            pid_t pid_unzip = fork();
-            int ext_status;
+    if (pid_donlod == 0) { 
+        execl("/usr/bin/wget", "wget", "-O", "library.zip", "https://drive.google.com/uc?export=download&id=1rUIZmp10lXLtCIH3LAZJzRPeRks3Crup", NULL);
 
-            if (pid_unzip == 0) { 
-                execl("/usr/bin/unzip", "unzip", "-o", "library.zip", "-d", "library", NULL);
-            } else if (pid_unzip > 0) { 
-                waitpid(pid_unzip, &ext_status, 0);
-                if (WIFEXITED(ext_status) && WEXITSTATUS(ext_status) == 0) {
-                    printf("Berhasil di unzip\n");
-                } else {
-                    perror("Gagal unzip");
-                    exit(1);
-                }
-            }
+    } else if (pid_donlod > 0) { 
+        waitpid(pid_donlod, &status, 0);
+    }
+}
+
+void unzipFile() {
+    pid_t pid_unzip = fork();
+    int ext_status;
+
+    if (pid_unzip == 0) { 
+        execl("/usr/bin/unzip", "unzip", "-o", "library.zip", "-d", "library", NULL);
+
+    } else if (pid_unzip > 0) { 
+        waitpid(pid_unzip, &ext_status, 0);
+
+        if (WIFEXITED(ext_status) && WEXITSTATUS(ext_status) == 0) {
+            printf("Berhasil di unzip\n");
         } else {
-            perror("Gagal mengunduh file ZIP");
+            perror("Gagal unzip");
             exit(1);
         }
     }
@@ -125,7 +126,8 @@ void handle_signal(int sig) {
 
 int main(int argc, char *argv[]) {
     run_as_daemon();
-    download_and_extract();
+    downloadFile();
+    unzipFile();
     
     signal(SIGRTMIN, handle_signal);
     signal(SIGUSR1, handle_signal);
