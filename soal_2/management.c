@@ -40,37 +40,32 @@ void run_as_daemon() {
 }
 
 void download_and_extract() {
-    pid_t pid;
-    int fd[2];
+    pid_t pid = fork();
+    int status;
 
-    if (pipe(fd) == -1) {
-        perror("pipe");
-        exit(EXIT_FAILURE);
-    }
+    if (pid == 0) { 
+        execl("/usr/bin/curl", "curl", "-L", "-o", "library.zip", "https://drive.google.com/uc?export=download&id=1rUIZmp10lXLtCIH3LAZJzRPeRks3Crup", NULL);
+    } else if (pid > 0) { 
+        waitpid(pid, &status, 0);
+        if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+            pid_t pid_unzip = fork();
+            int ext_status;
 
-    pid = fork();
-
-    if (pid == -1) {
-        perror("fork");
-        exit(EXIT_FAILURE);
-    } else if (pid == 0) {
-        close(fd[0]);
-        dup2(fd[1], STDOUT_FILENO);
-
-        execlp("wget", "wget", "-qO-", "https://drive.google.com/uc?export=download&id=1rUIZmp10lXLtCIH3LAZJzRPeRks3Crup", "|", "tar", "xvz", NULL);
-        perror("execlp");
-        exit(EXIT_FAILURE);
-    } else {
-        close(fd[1]);
-        char buffer[1024];
-        ssize_t n;
-
-        while ((n = read(fd[0], buffer, sizeof(buffer))) > 0) {
-            write(STDOUT_FILENO, buffer, n);
+            if (pid_unzip == 0) { 
+                execl("/usr/bin/unzip", "unzip", "-o", "library.zip", "-d", "library", NULL);
+            } else if (pid_unzip > 0) { 
+                waitpid(pid_unzip, &ext_status, 0);
+                if (WIFEXITED(ext_status) && WEXITSTATUS(ext_status) == 0) {
+                    printf("Berhasil di unzip\n");
+                } else {
+                    perror("Gagal unzip");
+                    exit(1);
+                }
+            }
+        } else {
+            perror("Gagal mengunduh file ZIP");
+            exit(1);
         }
-
-        close(fd[0]);
-        waitpid(pid, NULL, 0);
     }
 }
 
@@ -161,7 +156,7 @@ int main(int argc, char *argv[]) {
 
     while ((entry = readdir(dir)) != NULL) {
         file_count++;
-        if (file_count > 6) {
+        if (file_count < 6) {
             char filename[256];
             strcpy(filename, entry->d_name);
             dekripsi_rot19(filename);
