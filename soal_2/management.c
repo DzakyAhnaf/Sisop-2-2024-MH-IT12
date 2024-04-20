@@ -19,32 +19,26 @@ char mode[10] = "default";
 void run_as_daemon() {
     pid_t pid, sid;
 
-    // Fork off the parent process
     pid = fork();
     if (pid < 0) {
         exit(EXIT_FAILURE);
     }
 
-    // If we got a good PID, then we can exit the parent process
     if (pid > 0) {
         exit(EXIT_SUCCESS);
     }
 
-    // Change the file mode mask
     umask(0);
 
-    // Create a new SID for the child process
     sid = setsid();
     if (sid < 0) {
         exit(EXIT_FAILURE);
     }
 
-    // Change the current working directory
     if ((chdir("/")) < 0) {
         exit(EXIT_FAILURE);
     }
 
-    // Close out the standard file descriptors
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
@@ -54,13 +48,11 @@ void download_and_extract() {
     pid_t pid;
     int fd[2];
 
-    // Membuat pipe untuk komunikasi antara parent dan child process
     if (pipe(fd) == -1) {
         perror("pipe");
         exit(EXIT_FAILURE);
     }
 
-    // Fork untuk membuat child process
     pid = fork();
 
     if (pid == -1) {
@@ -71,7 +63,6 @@ void download_and_extract() {
         close(fd[0]); // Menutup read end dari pipe
         dup2(fd[1], STDOUT_FILENO); // Mengarahkan output ke pipe
 
-        // Mengunduh dan melakukan unzip file
         execlp("wget", "wget", "-qO-", "https://drive.google.com/uc?export=download&id=1rUIZmp10lXLtCIH3LAZJzRPeRks3Crup", "|", "tar", "xvz", NULL);
         perror("execlp");
         exit(EXIT_FAILURE);
@@ -81,7 +72,6 @@ void download_and_extract() {
         char buffer[1024];
         ssize_t n;
 
-        // Membaca output dari child process
         while ((n = read(fd[0], buffer, sizeof(buffer))) > 0) {
             write(STDOUT_FILENO, buffer, n);
         }
@@ -155,7 +145,6 @@ int main(int argc, char *argv[]) {
     run_as_daemon();
     download_and_extract();
     
-    // Mendaftarkan handler untuk sinyal
     signal(SIGRTMIN_VALUE, handle_signal);
     signal(SIGUSR1_VALUE, handle_signal);
     signal(SIGUSR2_VALUE, handle_signal);
@@ -173,7 +162,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // Dekripsi nama file ke-7 hingga terakhir
+    //deskripsi nama file 7 terakhir 
     DIR *dir;
     struct dirent *entry;
     int file_count = 0;
