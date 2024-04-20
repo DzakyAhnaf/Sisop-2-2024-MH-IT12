@@ -9,11 +9,6 @@
 #include <string.h>
 #include <signal.h>
 
-#define BACKUP_DIR "library/backup"
-#define SIGRTMIN_VALUE 34
-#define SIGUSR1_VALUE 10
-#define SIGUSR2_VALUE 12
-
 char mode[10] = "default";
 
 void run_as_daemon() {
@@ -59,16 +54,14 @@ void download_and_extract() {
         perror("fork");
         exit(EXIT_FAILURE);
     } else if (pid == 0) {
-        // Child process
-        close(fd[0]); // Menutup read end dari pipe
-        dup2(fd[1], STDOUT_FILENO); // Mengarahkan output ke pipe
+        close(fd[0]);
+        dup2(fd[1], STDOUT_FILENO);
 
         execlp("wget", "wget", "-qO-", "https://drive.google.com/uc?export=download&id=1rUIZmp10lXLtCIH3LAZJzRPeRks3Crup", "|", "tar", "xvz", NULL);
         perror("execlp");
         exit(EXIT_FAILURE);
     } else {
-        // Parent process
-        close(fd[1]); // Menutup write end dari pipe
+        close(fd[1]);
         char buffer[1024];
         ssize_t n;
 
@@ -77,7 +70,7 @@ void download_and_extract() {
         }
 
         close(fd[0]);
-        waitpid(pid, NULL, 0); // Menunggu child process selesai
+        waitpid(pid, NULL, 0);
     }
 }
 
@@ -115,29 +108,23 @@ void rename_file(char *filename) {
 
 void backup_file(char *filename) {
     char backup_path[256];
-    sprintf(backup_path, "%s/%s", BACKUP_DIR, filename);
+    sprintf(backup_path, "%s/%s", "library/backup", filename);
     rename(filename, backup_path);
 }
 
 void restore_file(char *filename) {
     char backup_path[256];
-    sprintf(backup_path, "%s/%s", BACKUP_DIR, filename);
+    sprintf(backup_path, "%s/%s", "library/backup", filename);
     rename(backup_path, filename);
 }
 
 void handle_signal(int sig) {
-    switch (sig) {
-        case SIGRTMIN_VALUE:
-            strcpy(mode, "default");
-            break;
-        case SIGUSR1_VALUE:
-            strcpy(mode, "backup");
-            break;
-        case SIGUSR2_VALUE:
-            strcpy(mode, "restore");
-            break;
-        default:
-            break;
+    if (sig == SIGRTMIN) {
+        strcpy(mode, "default");
+    } else if (sig == SIGUSR1) {
+        strcpy(mode, "backup");
+    } else if (sig == SIGUSR2) {
+        strcpy(mode, "restore");
     }
 }
 
@@ -145,9 +132,9 @@ int main(int argc, char *argv[]) {
     run_as_daemon();
     download_and_extract();
     
-    signal(SIGRTMIN_VALUE, handle_signal);
-    signal(SIGUSR1_VALUE, handle_signal);
-    signal(SIGUSR2_VALUE, handle_signal);
+    signal(SIGRTMIN, handle_signal);
+    signal(SIGUSR1, handle_signal);
+    signal(SIGUSR2, handle_signal);
 
     if (argc > 1) {
         if (strcmp(argv[1], "-m") == 0) {
@@ -162,7 +149,6 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    //deskripsi nama file 7 terakhir 
     DIR *dir;
     struct dirent *entry;
     int file_count = 0;
