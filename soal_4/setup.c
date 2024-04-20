@@ -4,15 +4,11 @@
 #include <unistd.h>
 #include <signal.h>
 
-#define MAX_APPS 10
-#define MAX_NAME_LENGTH 50
-#define MAX_FILE_LINE_LENGTH 100
-
 struct App {
-    char name[MAX_NAME_LENGTH];
+    char name[50];
     int numWindows;
-    pid_t pid[MAX_APPS]; 
-    int numPid; // Jumlah proses
+    pid_t pid[10]; // Menyimpan PID proses yang diluncurkan
+    int numPid; // Jumlah proses yang diluncurkan
 };
 
 void saveDataToFile(const struct App apps[], int numApps);
@@ -26,7 +22,7 @@ void killAllpid(const char* filename);
 void mergepid(const char* srcFilename1, const char* srcFilename2, const char* destFilename);
 
 int main(int argc, char *argv[]) {
-    struct App apps[MAX_APPS];
+    struct App apps[10];
     int numApps = 0;
 
     if (argc == 1) {
@@ -176,7 +172,7 @@ void openAppsFromFile(const char *filename, struct App apps[], int *numApps) {
         return;
     }
 
-    char line[MAX_FILE_LINE_LENGTH];
+    char line[100];
     while (fgets(line, sizeof(line), file) != NULL) {
         line[strcspn(line, "\n")] = '\0';
 
@@ -237,7 +233,7 @@ void killApps(struct App apps[], int numApps) {
     for (int i = 0; i < numApps; i++) {
         for (int j = 0; j < apps[i].numPid; j++) {
             printf("Killing process %d...\n", apps[i].pid[j]);
-            int result = kill(apps[i].pid[j]+1, SIGTERM); // pid saya tambahkan 1 soalnya selalu beda 1 digit dari sistem
+            int result = kill(apps[i].pid[j]+1, SIGTERM); // saya tambahkan 1 karena PID selalu berbeda 1 digit dari sistem
             if (result == 0) {
                 printf("Process %d terminated successfully\n", apps[i].pid[j]);
             } else {
@@ -247,6 +243,7 @@ void killApps(struct App apps[], int numApps) {
     }
 }
 
+// buat kill file PID gabungan
 void killAllpid(const char* filename) {
     FILE *file = fopen(filename, "r");
     if (!file) {
@@ -258,7 +255,7 @@ void killAllpid(const char* filename) {
     while (fscanf(file, "%d", &pid) == 1) {
         if (pid > 0) {
             printf("Killing process %d...\n", pid);
-            int result = kill(pid + 1, SIGTERM); // pid saya tambahkan 1 soalnya selalu beda 1 digit dari sistem
+            int result = kill(pid + 1, SIGTERM); // saya tambahkan 1 karena PID selalu berbeda 1 digit dari sistem
             if (result == 0) {
                 printf("Process %d terminated successfully.\n", pid);
             } else {
@@ -269,7 +266,7 @@ void killAllpid(const char* filename) {
     fclose(file);
 }
 
-// gabungin pid dari 2 file.txt -o dan -f
+// gabungin PID dari -o dan -f 
 void mergepid(const char* srcFilename1, const char* srcFilename2, const char* destFilename) {
     FILE *src1 = fopen(srcFilename1, "r");
     FILE *src2 = fopen(srcFilename2, "r");
@@ -289,14 +286,15 @@ void mergepid(const char* srcFilename1, const char* srcFilename2, const char* de
     }
 
     int pid, numApps;
-    fscanf(src1, "%d", &numApps);  // Skip numApps, langsung PID
+
+    fscanf(src1, "%d", &numApps);  // skip line numApps, langsung PID di line berikutnya
     while (fscanf(src1, "%d", &pid) == 1) {
-        fprintf(dest, "%d\n", pid); //pindahin ke file dest
+        fprintf(dest, "%d\n", pid); // salin ke dest
     }
 
-    fscanf(src2, "%d", &numApps);  // Skip numApps, langsung PID
+    fscanf(src2, "%d", &numApps);  // skip line numApps, langsung PID di line berikutnya
     while (fscanf(src2, "%d", &pid) == 1) {
-        fprintf(dest, "%d\n", pid); //pindahin ke file dest
+        fprintf(dest, "%d\n", pid); // salin ke dest
     }
 
     fclose(src1);
