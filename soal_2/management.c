@@ -39,33 +39,44 @@ void run_as_daemon() {
     close(STDERR_FILENO);
 }
 
-void downloadFile() {
-    pid_t pid_donlod = fork();
-    int status;
-
-    if (pid_donlod == 0) { 
-        execl("/usr/bin/wget", "wget", "-O", "library.zip", "https://drive.google.com/uc?export=download&id=1rUIZmp10lXLtCIH3LAZJzRPeRks3Crup", NULL);
-
-    } else if (pid_donlod > 0) { 
-        waitpid(pid_donlod, &status, 0);
+void downloadFile(const char *url, const char *output_path) {
+    pid_t pid = fork();
+    if (pid < 0) {
+        perror("Error forking");
+        exit(EXIT_FAILURE);
+    } else if (pid == 0) {
+        execlp("wget", "wget", "--content-disposition","-O", output_path, url, NULL);
+        perror("Error running wget");
+        exit(EXIT_FAILURE);
+    } else {
+        int status;
+        waitpid(pid, &status, 0);
+        if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+            printf("Download success!.\n");
+        } else {
+            printf("Download fail...\n");
+            exit(EXIT_FAILURE);
+        }
     }
 }
 
-void unzipFile() {
-    pid_t pid_unzip = fork();
-    int ext_status;
-
-    if (pid_unzip == 0) { 
-        execl("/usr/bin/unzip", "unzip", "-o", "library.zip", "-d", "library", NULL);
-
-    } else if (pid_unzip > 0) { 
-        waitpid(pid_unzip, &ext_status, 0);
-
-        if (WIFEXITED(ext_status) && WEXITSTATUS(ext_status) == 0) {
-            printf("Berhasil di unzip\n");
+void unzipFile(const char *zip_file, const char *output_dir) {
+    pid_t pid = fork();
+    if (pid < 0) {
+        perror("Error forking");
+        exit(EXIT_FAILURE);
+    } else if (pid == 0) {
+        execlp("unzip", "unzip", "-o", zip_file, "-d", output_dir, NULL);
+        perror("Can't unzip");
+        exit(EXIT_FAILURE);
+    } else {
+        int status;
+        waitpid(pid, &status, 0);
+        if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+            printf("Extraction success!\n");
         } else {
-            perror("Gagal unzip");
-            exit(1);
+            printf("Extraction fail...\n");
+            exit(EXIT_FAILURE);
         }
     }
 }
@@ -124,11 +135,16 @@ void handle_signal(int sig) {
     }
 }
 
+
 int main(int argc, char *argv[]) {
+    const char *download_url = "https://drive.google.com/uc?export=download&id=1rUIZmp10lXLtCIH3LAZJzRPeRks3Crup";
+    const char *zip_file = "/home/ubuntu/sisop2.2/library.zip";
+    const char *output_dir = "/home/ubuntu/sisop2.2/";
+
+    downloadFile(download_url, zip_file);
+    unzipFile(zip_file, output_dir);    
     run_as_daemon();
-    downloadFile();
-    unzipFile();
-    
+
     signal(SIGRTMIN, handle_signal);
     signal(SIGUSR1, handle_signal);
     signal(SIGUSR2, handle_signal);
