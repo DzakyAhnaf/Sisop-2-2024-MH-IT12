@@ -236,16 +236,13 @@ g. Terakhir, program ini harus berjalan setiap detik dan mampu mencatat setiap p
         - [paul][00:00:00] - r3N4mE.ts - Successfully renamed.
         - [paul][00:00:00] - m0V3.xk1 - Successfully restored from backup.
 
-h. Berikut adalah struktur folder untuk pengerjaan nomor 2:
+h. Berikut adalah struktur folder untuk pengerjaan nomor 2 :
+
     soal_2/
-    
-    ├── history.log
-    
-    ├── management.c
-    
-    └── library/
-    
-        └── backup/
+        ├── history.log
+        ├── management.c
+        └── library/
+             └── backup/
 
 ---
 
