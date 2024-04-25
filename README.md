@@ -199,6 +199,7 @@ Dikerjakan oleh Nisrina Atiqah Dwiputri Ridzki (5027231075)
 ---
 
 Paul adalah seorang mahasiswa semester 4 yang diterima magang di perusahaan XYZ. Pada hari pertama magang, ia diberi tugas oleh atasannya untuk membuat program manajemen file sederhana. Karena kurang terbiasa dengan bahasa C dan environment Linux, ia meminta bantuan kalian untuk mengembangkan program tersebut.
+
 a. Atasannya meminta agar program tersebut dapat berjalan secara daemon dan dapat mengunduh serta melakukan unzip terhadap file berikut. Atasannya juga meminta program ini dibuat tanpa menggunakan command system()
 
 b. Setelah ditelusuri, ternyata hanya 6 file teratas yang nama filenya tidak dienkripsi. Oleh karena itu, bantulah Paul untuk melakukan dekripsi terhadap nama file ke-7 hingga terakhir menggunakan algoritma ROT19
@@ -236,10 +237,15 @@ g. Terakhir, program ini harus berjalan setiap detik dan mampu mencatat setiap p
         - [paul][00:00:00] - m0V3.xk1 - Successfully restored from backup.
 
 h. Berikut adalah struktur folder untuk pengerjaan nomor 2:
+
     soal_2/
+    
     ├── history.log
+    
     ├── management.c
+    
     └── library/
+    
         └── backup/
 
 ---
