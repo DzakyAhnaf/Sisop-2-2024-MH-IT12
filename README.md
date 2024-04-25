@@ -173,7 +173,159 @@ int main(int argc, char *argv[]) {
 }
 
 ```
+---
 
+### Penjelesan
+
+---
+
+1. Fungsi ```replaceSubstring```:
+```c
+void replaceSubstring(char *str, const char *oldWord, const char *newWord) {
+    char *pos, temp[MAX_BUFFER_SIZE];
+    int index = 0;
+    int oldWordLength = strlen(oldWord);
+    int newWordLength = strlen(newWord);
+
+    while ((pos = strstr(str, oldWord)) != NULL) {
+        strcpy(temp, str);
+        index = pos - str;
+        str[index] = '\0';
+        strcat(str, newWord);
+        strcat(str, temp + index + oldWordLength);
+    }
+}
+```
+Fungsi ```replaceSubstring``` digunakan untuk mengganti sebuah substring (```oldWord```) dengan substring baru (```newWord```) di dalam sebuah string (```str```). Fungsi ini bekerja dengan mencari kemunculan ```oldWord``` dalam ```str``` menggunakan ```strstr```. Jika ditemukan, fungsi akan membagi str menjadi dua bagian: bagian sebelum oldWord dan bagian setelah ```oldWord```. Kemudian, bagian sebelum ```oldWord``` digabungkan dengan ```newWord``` dan bagian setelah ```oldWord``` untuk membentuk string baru. Proses ini diulang menggunakan ```while``` loop sampai tidak ada lagi kemunculan ```oldWord``` dalam ```str```.
+
+2. Fungsi ```writeLogEntry```:
+```c
+void writeLogEntry(const char *fileName) {
+    FILE *file = fopen(LOG_FILE, "a");
+    if (file != NULL) {
+        time_t now = time(NULL);
+        struct tm *tm_info = localtime(&now);
+        char timestamp[20];
+        strftime(timestamp, 20, "%d-%m-%Y %H:%M:%S", tm_info);
+        fprintf(file, "[%s] Suspicious string at %s successfully replaced!\n", timestamp, fileName);
+        fclose(file);
+    }
+}
+```
+Fungsi ```writeLogEntry``` digunakan untuk menulis entri log ke dalam file ```virus.log```. Fungsi ini membuka file ```virus.log``` dalam mode "append" (```"a"```). Kemudian, fungsi akan mendapatkan waktu saat ini menggunakan ```time``` dan ```localtime```, dan memformat waktu tersebut ke dalam string ```timestamp``` dengan format ```"dd-mm-YYYY HH:MM:SS"```. Selanjutnya, ```fprintf()``` akan menulis entri log ke dalam file ```virus.log``` dengan format ```[timestamp] Suspicious string at <fileName> successfully replaced!```. Terakhir, ```fclose()``` akan menututup ```virus.log```.
+
+3. Fungsi ```processFile```:
+```c
+void processFile(const char *filePath) {
+    char buffer[MAX_BUFFER_SIZE];
+    FILE *file = fopen(filePath, "r+");
+    if (file == NULL) {
+        syslog(LOG_ERR, "Error opening file: %s", filePath);
+        return;
+    }
+
+    char *suspiciousStrings[] = {"m4LwAr3", "5pYw4R3", "R4nS0mWaR3"};
+    char *replacementStrings[] = {"[MALWARE]", "[SPYWARE]", "[RANSOMWARE]"};
+
+    while (fgets(buffer, sizeof(buffer), file)) {
+        for (int i = 0; i < sizeof(suspiciousStrings) / sizeof(suspiciousStrings[0]); ++i) {
+            replaceSubstring(buffer, suspiciousStrings[i], replacementStrings[i]);
+            if (strstr(buffer, replacementStrings[i]) != NULL) {
+                writeLogEntry(filePath);
+            }
+        }
+        fseek(file, -strlen(buffer), SEEK_CUR);
+        fputs(buffer, file);
+    }
+    fclose(file);
+}
+```
+
+Fungsi ```processFile``` digunakan untuk memproses sebuah file dengan mengganti string-string tertentu (```"m4LwAr3"```, ```"5pYw4R3"```, dan ```"R4nS0mWaR3"```) dengan string-string pengganti (```"[MALWARE]"```, ```"[SPYWARE]"```, dan ```"[RANSOMWARE]"```). Fungsi ini membuka file yang diberikan dalam mode read/write (```"r+"```). Kemudian, fungsi akan membaca setiap baris dari file menggunakan ```fgets```. Untuk setiap baris, fungsi akan memanggil ```replaceSubstring``` untuk mengganti string-string tersebut. Jika terjadi penggantian, fungsi ```writeLogEntry``` akan dipanggil untuk menulis entri log ke dalam file ```virus.log```. Setelah itu, baris yang telah diproses akan ditulis kembali ke dalam file menggunakan ```fputs```. Terakhir, file akan ditutup.
+
+4. Fungsi ```main```:
+```c
+int main(int argc, char *argv[]) {
+    // ...
+    // Daemonize the process
+    pid_t pid = fork();
+    if (pid < 0) {
+        perror("Fork failed");
+        return 1;
+    }
+    if (pid > 0) {
+        // Parent process, exit
+        return 0;
+    }
+
+    // Change the file mode mask
+    umask(0);
+
+    // Create a new session
+    if (setsid() < 0) {
+        perror("Setsid failed");
+        return 1;
+    }
+
+    // Change the working directory to specified folder
+    if (chdir(argv[1]) < 0) {
+        perror("Chdir failed");
+        return 1;
+    }
+
+    // Close standard file descriptors
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
+
+    // Open syslog for logging
+    openlog(argv[0], LOG_PID, LOG_DAEMON);
+
+    // Main daemon loop
+    while (1) {
+        // Process files in the directory
+        struct dirent *dp;
+        DIR *dir = opendir(".");
+        if (dir != NULL) {
+            while ((dp = readdir(dir)) != NULL) {
+                if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0) {
+                    processFile(dp->d_name);
+                }
+            }
+            closedir(dir);
+        } else {
+            syslog(LOG_ERR, "Error opening directory: %s", argv[1]);
+        }
+
+        // Sleep for 15 seconds
+        sleep(15);
+    }
+
+    // Close syslog
+    closelog();
+    return 0;
+}
+```
+Fungsi ```main``` adalah fungsi utama dari program ini. Fungsi ini menerima dua argumen: ```argc``` (jumlah argumen) dan ```argv```(array yang berisi argumen-argumen tersebut). Jika jumlah argumen tidak sesuai dengan yang diharapkan (hanya satu argumen selain nama program, yaitu ```<folder_path>```), program akan menampilkan cara penggunaan dan keluar.
+Selanjutnya, program akan melakukan proses daemonisasi dengan melakukan ```fork``` dua kali. Proses anak akan menjadi proses daemon, sedangkan proses induk akan keluar. Proses daemon akan mengubah mode file menggunakan ```umask(0)```, membuat sesi baru menggunakan ```setsid()```, dan mengubah direktori kerja ke direktori yang diberikan (```argv[1]```).
+Setelah itu, program akan menutup file deskriptor standar (```stdin```, ```stdout```, ```stderr```) dan membuka ```syslog``` untuk logging menggunakan ```openlog```.
+
+Program ini akan terus berjalan dalam loop yang tidak terbatas (```while (1)```). Di dalam loop ini, program akan memproses semua file dalam direktori saat ini (```"."```) dengan menggunakan fungsi ```opendir``` dan ```readdir```. Program akan melewatkan file atau direktori dengan nama khusus (```"."``` dan ```".."```) dan memproses file lainnya dengan memanggil fungsi ```processFile```.
+Setelah memproses semua file dalam direktori, program akan tertidur selama 15 detik dengan memanggil fungsi ```sleep(15)```. Setelah 15 detik, program akan kembali memproses semua file dalam direktori yang sama.
+
+Setelah keluar dari loop utama (yang seharusnya tidak pernah terjadi karena loop tersebut adalah loop yang tidak terbatas), program akan menutup ```syslog``` dengan memanggil fungsi ```closelog()``` dan kemudian keluar dengan mengembalikan nilai ```0```.
+Secara umum, program ini akan berjalan sebagai daemon di latar belakang dan secara berkala (setiap 15 detik) memproses semua file dalam direktori yang diberikan, mengganti string-string tertentu, dan menulis entri log ke dalam file ```virus.log```. Program ini akan terus berjalan hingga dihentikan secara manual.
+
+### Dokumentasi Hasil Program
+
+---
+- Hasil file txt setelah program dijalankan
+
+![image](https://github.com/DzakyAhnaf/Sisop-2-2024-MH-IT12/assets/110287409/92666fd5-2ec8-4633-9860-6a2d2ed69110)
+
+- Hasil file ```virus.log```
+
+![image](https://github.com/DzakyAhnaf/Sisop-2-2024-MH-IT12/assets/110287409/7b64225c-51d8-46e1-837d-8c9fba62ed15)
 
 ## Soal 2
 
