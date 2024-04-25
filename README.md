@@ -1,7 +1,4 @@
 # Laporan Resmi Praktikum Sistem Operasi 2024 Modul-2
-
----
-
 ### Anggota Kelompok IT 12 :
 
 - Muhammad Dzaky Ahnaf (5027231039)
@@ -11,13 +8,7 @@
 ## Soal 1
 
 Dikerjakan oleh Muhammad Dzaky Ahnaf (5027231039)
-
----
-
 ### Deskripsi Soal
-
----
-
 a. Program dapat menerima input path berupa ‘argv’ untuk mengatur folder dimana file akan dieksekusi
 
 b. Program tersebut berfungsi untuk mereplace string dengan ketentuan sebagai berikut:
@@ -41,11 +32,7 @@ Contoh isi file setelah setelah program dijalankan:
 
 ![Selection_002](https://github.com/DzakyAhnaf/Sisop-2-2024-MH-IT12/assets/110287409/814a0370-3036-4603-b289-fbe176756377)
 
----
-
 ### Kode Penyelesaian
-
----
 
 ```c
 #include <stdio.h>
@@ -192,11 +179,7 @@ int main(int argc, char *argv[]) {
 
 Dikerjakan oleh Nisrina Atiqah Dwiputri Ridzki (5027231075)
 
----
-
 ### Deskripsi Soal
-
----
 
 Paul adalah seorang mahasiswa semester 4 yang diterima magang di perusahaan XYZ. Pada hari pertama magang, ia diberi tugas oleh atasannya untuk membuat program manajemen file sederhana. Karena kurang terbiasa dengan bahasa C dan environment Linux, ia meminta bantuan kalian untuk mengembangkan program tersebut.
 
@@ -244,12 +227,7 @@ h. Berikut adalah struktur folder untuk pengerjaan nomor 2 :
         └── library/
              └── backup/
 
----
-
 ### Kode Penyelesaian
-
-
----
 
 ```c
 #include <stdio.h>
@@ -459,3 +437,643 @@ int main(int argc, char *argv[]) {
 }
 
 ```
+## Soal 3
+
+Dikerjakan oleh Adlya Isriena Aftarisya (5027231066)
+
+### Deskripsi Soal
+
+Pak Heze adalah seorang admin yang baik. Beliau ingin membuat sebuah program admin yang dapat memantau para pengguna sistemnya. Bantulah Pak Heze untuk membuat program  tersebut!
+
+### Catatan
+
+<img width="513" alt="image" src="https://github.com/DzakyAhnaf/Sisop-2-2024-MH-IT12/assets/164857172/408a2610-738a-40ec-9353-3e2f81b9e77e">
+
+- stdio.h: menyediakan fungsi-fungsi standar input-output
+- stdlib.h: berisi fungsi-fungsi standar yang digunakan dalam pemrograman C
+- unistd.h: berisi deklarasi untuk fungsi-fungsi sistem POSIX (Portable Operating System Interface) seperti **`fork`**, **`exec`**, **`pipe`**, dan fungsi-fungsi lainnya yang berkaitan dengan sistem.
+- sys/types.h: menyediakan deklarasi untuk berbagai tipe data sistem seperti **`pid_t`**, **`size_t`**, **`off_t`**
+- sys/stat.h: berisi deklarasi untuk fungsi-fungsi yang berkaitan dengan status file dan struktur data **`struct stat`**
+- signal.h: berisi deklarasi untuk fungsi-fungsi yang berkaitan dengan penanganan sinyal (signal handling) seperti **`signal`**, **`kill`**, **`sigaction`**, dan tipe data **`sig_atomic_t`**
+- syslog.h: berisi fungsi-fungsi yang digunakan untuk menulis pesan ke sistem log
+- string.h: menyediakan fungsi-fungsi yang berkaitan dengan manipulasi string seperti **`strcpy`**, **`strcat`**, **`strlen`**, dan fungsi-fungsi lainnya.
+- fcntl.h: Library ini berisi deklarasi untuk fungsi-fungsi yang berkaitan dengan kontrol file dan deskriptor file, seperti **`open`**
+- time.h: Library ini berisi deklarasi untuk fungsi-fungsi yang berkaitan dengan manipulasi waktu dan tanggal, seperti **`time`**, **`localtime`**, **`strftime`**, dan tipe data **`struct tm`**.
+- volatile sig_atomic_t current_status = 0 menginstruksikan kompiler untuk tidak melakukan optimisasi yang dapat menyebabkan pembacaan atau penulisan ulang variabel dilewati.
+
+### Pengerjaan
+
+```c
+int main(int argc, char *argv[]) {
+    if (argc < 3) {
+        printf("Usage: %s [-m|-s|-c|-a] <user>\n", argv[0]);
+        return 1;
+    }
+		.....
+```
+
+pertama-tama, fungsi main. Disini, program akan memeriksa argumen baris perintah untuk menentukan tindakan yang harus dilakukan.
+
+- jika `argc < 3` program akan mengeluarkan output yang menunjukkan arahan argc yang benar
+
+```c
+	const char* user = argv[2];
+  int kill_process = 0;
+  const char* status_file = "/Users/tarisa/smt-2/sisop/soal4/status_file"; 
+```
+
+- user: pointer ke string yang menyimpan nama user yang diberikan dari argc[2]
+- kill_process: menentukan apakah proses-proses yang berjalan oleh user tersebut harus dihentikan atau tidak. Nilai 0 menunjukkan bahwa proses-proses tidak akan dihentikan, sementara nilai 1 menunjukkan bahwa proses-proses akan dihentikan.
+- status_file: pointer ke string yang menyimpan path ke file yang digunakan untuk menyimpan status program. File ini digunakan untuk memperbarui status apakah program sedang berjalan atau gagal. Isi dari file ini akan dibaca dan diperbarui oleh fungsi **`update_status()`**.
+
+```c
+if (strcmp(argv[1], "-m") == 0) {
+        start_daemon();
+        save_pid();
+        monitoring(user, kill_process);
+    } else if (strcmp(argv[1], "-s") == 0) {
+        stop_daemon(user);
+    } else if (strcmp(argv[1], "-c") == 0) {
+        FILE* file = fopen(status_file, "w");
+        if (file) {
+            fprintf(file, "1"); // GAGAL
+            fclose(file);
+        }
+        kill_process = 1;
+        start_daemon();
+        save_pid();
+        monitoring(user, kill_process);
+    } else if (strcmp(argv[1], "-a") == 0) {
+        FILE* file = fopen(status_file, "w");
+        if (file) {
+            fprintf(file, "0"); // JALAN
+            fclose(file);
+        }
+        start_daemon();
+        save_pid();
+    }
+
+    closelog();
+    return 0;
+}
+```
+
+- **-m (start monitoring)**
+    - jika `argv[1]` adalah `-m`, maka program akan memulai monitoring
+    - `start_daemon()`: agar program berjalan secara daemon
+    - `save_pid()`: menyimpan pid daemon ke file [`admin.pid`](http://admin.pid) agar dapat dimatikan nantinya
+    - `monitoring(user, kill_process);` untuk memulai proses monitoring user yang telah ditentukan dari argumen perintah
+- **-s (stop monitoring)**
+    - jika `argv[1]` adalah `-s`, maka program akan menghentikan monitoring
+    - `stop_daemon(user);` menghentikan program daemon yang sedang berjalan
+- **-c (monitoring dan killing process)**
+    - jika `argv[1]` adalah `-c`, maka program akan memulai monitoring dan menghentikan proses yang sedang berjalan
+    - File **`status_file`** dibuka untuk menulis, dan status program diatur menjadi "1" yang menandakan mode "GAGAL"
+    - **`kill_process`** diatur menjadi **`1`** untuk menunjukkan bahwa proses harus dihentikan
+    - **`start_daemon()`** dan **`save_pid()`** dipanggil seperti pada mode monitoring biasa.
+    - **`monitoring(user, kill_process)`** memulai pemantauan proses dengan opsi untuk menghentikan proses yang berjalan
+- **-a (stop command -c)**
+    - jika `argv[1]` adalah `-a`, maka program akan memulai monitoring tanpa menghentikan proses yang sedang berjalan
+    - File **`status_file`** dibuka untuk menulis, dan status program diatur menjadi 0 yang menandakan mode "JALAN"
+    - **`start_daemon()`** dan **`save_pid()`** dipanggil untuk memulai kembali proses daemon dan menyimpan PID-nya
+
+```c
+void start_daemon() {
+    pid_t pid = fork();
+    if (pid < 0) {
+        exit(EXIT_FAILURE);
+    }
+    if (pid > 0) {
+        exit(EXIT_SUCCESS);
+    }
+
+    umask(0);
+
+    if (setsid() < 0) {
+        exit(EXIT_FAILURE);
+    }
+    if (chdir("/Users/tarisa/smt-2/sisop/soal4") < 0) { 
+        exit(EXIT_FAILURE);
+    }
+
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
+}
+```
+
+Fungsi `start_daemon()` untuk memulai program secara daemon sesuai dengan yang di modul dengan mengubah chdir dengan directory perngerjaan
+
+```c
+void monitoring(const char *user, int kill_process) {
+    const char* status_file = "/Users/tarisa/smt-2/sisop/soal4/status_file"; 
+    while (1) {
+        update_status(status_file);  
+        char command[256];
+        snprintf(command, sizeof(command), "ps -u %s -o pid,comm | awk 'NR>1 {print $1, $2}'", user);
+        FILE *fp = popen(command, "r");
+        if (!fp) {
+            syslog(LOG_ERR, "Failed to run command.\n");
+            exit(1);
+        }
+
+        char pid[32]; // Menyimpan PID sebagai string
+        char process_name[256]; // Menyimpan nama proses sebagai string
+        char log_filename[100];
+        char *status = current_status ? "GAGAL" : "JALAN";
+        while (fscanf(fp, "%s %s", pid, process_name) != EOF) {
+            log_activity(user, pid, process_name, status);
+            snprintf(log_filename, sizeof(log_filename), "%s.log", user);
+            FILE *log_file = fopen(log_filename, "a");
+            if (log_file == NULL) {
+                perror("Failed to open log file");
+                exit(EXIT_FAILURE);
+            }
+            if (kill_process == 1) {
+                int res = kill(atoi(pid), SIGTERM);
+                if (res != 0) {
+                    perror("kill");
+                    fprintf(log_file, "GAGAL KILL SI %d-%s_\n", atoi(pid), process_name);
+                    exit(EXIT_FAILURE);
+                } 
+            }
+        }
+
+        pclose(fp);
+        sleep(5);
+    }
+}
+```
+
+Fungsi **`monitoring()`** berguna untuk memantau proses-proses yang berjalan pada user tertentu
+
+- Program akan melakukan pemantauan secara terus-menerus dengan menggunakan loop **`while(1)`**
+- Command **`ps`** dieksekusi untuk mendapatkan daftar proses yang sedang berjalan untuk user yang ditentukan. Hasil dari command **`ps`** diproses menggunakan fungsi **`popen()`** untuk dibaca dalam program, setiap baris output dari command **`ps`** diparsing untuk mendapatkan PID dan nama proses
+- PID dan nama proses disimpan dalam variabel **`pid`** dan **`process_name`** berturut-turut
+- **`log_activity()`** dipanggil untuk mencatat aktivitas proses ke dalam file log
+- Jika variabel **`kill_process`** bernilai **`1`**, proses akan dihentikan menggunakan fungsi **`kill()`** dengan sinyal **`SIGTERM`.** Hasil dari pemanggilan fungsi **`kill()`** akan diperiksa, dan jika tidak berhasil, pesan kesalahan akan dicatat dalam file log.
+- Fungsi **`pclose()`** dipanggil untuk menutup stream dari command **`ps`**
+- Program akan sleep selama 5 detik sebelum memulai iterasi berikutnya dari loop
+
+```c
+void update_status(const char *status_file) {
+    FILE* f = fopen(status_file, "r");
+    if (f) {
+        fscanf(f, "%d", &current_status);
+        fclose(f);
+    }
+}
+```
+
+Fungsi **`update_status()`** digunakan untuk memperbarui status program (JALAN atau GAGAL) dari file yang ditentukan. Fungsi ini membaca status dari file dan memperbarui variabel **`current_status`** sesuai dengan nilai yang dibaca.
+
+```c
+void log_activity(const char* user, const char* pid, const char* process_name, const char* status) {
+    char filename[100];
+    sprintf(filename, "%s.log", user);
+    FILE* log_file = fopen(filename, "a");
+    if (log_file == NULL) {
+        syslog(LOG_ERR, "Failed to open log file.\n");
+        return;
+    }
+
+    time_t now = time(NULL);
+    struct tm *tm_struct = localtime(&now);
+    fprintf(log_file, "[%02d:%02d:%04d]-[%02d:%02d:%02d]-%s-%s-%s\n",
+            tm_struct->tm_mday, tm_struct->tm_mon + 1, tm_struct->tm_year + 1900,
+            tm_struct->tm_hour, tm_struct->tm_min, tm_struct->tm_sec,
+            pid, process_name, status);
+    fclose(log_file);
+}
+```
+
+Fungsi **`log_activity()`** berguna untuk mencatat aktivitas yang terjadi ke dalam file log. Fungsi ini mencatat waktu kejadian, pid proses, nama proses, dan status ke dalam file log.
+
+```c
+void save_pid() {
+    FILE* file = fopen("admin.pid", "a");
+    if (file == NULL) {
+        perror("Failed to write PID file.\n");
+        exit(EXIT_FAILURE);
+    }
+    fprintf(file, "%d\n", getpid());
+    fclose(file);
+}
+```
+
+Fungsi **`save_pid()`** digunakan untuk menyimpan PID (Process ID) daemon dengan getpid() ke dalam file. Ini dilakukan agar daemon dapat dihentikan nantinya. 
+
+```c
+void stop_daemon(const char* user) {
+    char filename[50];
+    sprintf(filename, "%s.log", user); 
+    FILE* file = fopen("admin.pid", "r");
+    if (file == NULL) {
+        syslog(LOG_ERR, "Failed to read PID file.\n");
+        return;
+    }
+    int pid;
+    while (fscanf(file, "%d", &pid) != EOF) { // Loop sampai EOF untuk membaca semua PID
+        kill(pid, SIGTERM); // Mengirim sinyal SIGTERM ke PID
+    }
+    fclose(file);
+
+    remove("admin.pid");  // hapus file pid
+    remove(filename);  // hapus file log
+    remove("status_file");
+}
+```
+
+Fungsi **`stop_daemon`** bertujuan untuk menghentikan daemon yang sedang berjalan dan menghapus file-file yang berkaitan dengan program daemon. Fungsi akan membuka file [`admin.pid`](http://admin.pid) yang berisikan PID yang telah tersimpah dari fungsi `save_pid()` sebelumnya lalu menghentikan semua PID yang berada di dalamnya menggunakan `SIGTERM`
+
+### Errors
+
+-c tidak berhasil menghentikan proses yang berjalan karena lupa tambahin kill pid process
+
+![image](https://github.com/DzakyAhnaf/Sisop-2-2024-MH-IT12/assets/164857172/2718124a-d2c9-4e9b-bef1-870a9d789f40)
+
+sudah ditambahi kill PID process namun -c tetap gagal menghentikan process, solusinya switch user ke root `su -` 
+
+![image](https://github.com/DzakyAhnaf/Sisop-2-2024-MH-IT12/assets/164857172/f57e5e5a-073b-4bbb-8d4d-4afef1e6536e)
+
+![image](https://github.com/DzakyAhnaf/Sisop-2-2024-MH-IT12/assets/164857172/5081f2d0-e9da-43bc-8154-db179a354d8e)
+
+## Soal 4
+
+Dikerjakan oleh Adlya Isriena Aftarisya (5027231066)
+
+### Deskripsi Soal
+
+Salomo memiliki passion yang sangat dalam di bidang sistem operasi. Saat ini, dia ingin mengotomasi kegiatan-kegiatan yang ia lakukan agar dapat bekerja secara efisien. Bantulah Salomo untuk membuat program yang dapat mengotomasi kegiatan dia!
+
+### Pengerjaan
+
+```c
+struct App {
+    char name[50];
+    int numWindows;
+    pid_t pid[10]; 
+    int numPid; 
+};
+```
+
+- name: nama aplikasi
+- numWindows: jumlah windows yang akan dibuka
+- pid: array untuk menyimpan PID process yang sedang berjalan
+- numPID: jumlah proses yang diluncurkan
+
+```c
+int main(int argc, char *argv[]) {
+    struct App apps[10];
+    int numApps = 0;
+
+    if (argc == 1) {
+        printf("Usage: %s -o <app1> <num1> <app2> <num2> ... OR %s -f <filename> OR %s -k OR %s -k <filename>\n", argv[0], argv[0], argv[0], argv[0]);
+        return 1;
+    }
+		....
+```
+
+Fungsi main berguna untuk menjalankan program sesuai dengan argumen perintah yang diinput.
+
+- variabel `numApps` akan diinisialisasi dengan 0 sebagai jumlah awal dari aplikasi yang dibuka
+- jika argumen perintah yang diinput sama dengan 1 `(argc == 1)` program tidak akan berjalan dan memberikan output arahan argumen yang sesuai dengan program
+
+```c
+if (strcmp(argv[1], "-o") == 0) {
+        if (argc < 4 || argc % 2 != 0) {
+            printf("Invalid number of arguments\n");
+            return 1;
+        }
+        numApps = (argc - 2) / 2;
+        for (int i = 0; i < numApps; i++) {
+            strcpy(apps[i].name, argv[i * 2 + 2]);
+            apps[i].numWindows = atoi(argv[i * 2 + 3]);
+            apps[i].numPid = 0;
+        }
+        openApps(apps, numApps);
+        saveDataToFile(apps, numApps);
+    } else if (strcmp(argv[1], "-f") == 0) {
+        if (argc != 3) {
+            printf("Invalid number of arguments\n");
+            return 1;
+        }
+        FILE *file = fopen("app_data.txt", "r");
+        if(file != NULL) {
+            openAppsFromFile(argv[2],apps, &numApps);
+            saveDataFToFile(apps, numApps);
+            mergepid("app_data.txt", "app_dataf.txt", "combine.txt");
+        }
+        else {
+            openAppsFromFile(argv[2],apps, &numApps);
+            saveDataFToFile(apps, numApps);
+        }
+        fclose(file);
+    } else if (strcmp(argv[1], "-k") == 0) {
+        if (argc == 2) { // ./setup -k
+            FILE *file = fopen("app_data.txt", "r");
+            FILE *file1 = fopen("app_dataf.txt", "r");
+            FILE *file2 = fopen("combine.txt", "r");
+
+            if (file == NULL && file1 == NULL) { // data -o ga ada dan data -f ga ada
+                printf("Failed to open file\n");
+                    return 1;
+            } 
+
+            else if (file != NULL && file1 == NULL) { // data -o ada data -f ga ada
+                readOData(apps, &numApps);
+                killApps(apps, numApps);
+                fclose(file);
+                remove("app_data.txt");
+            }
+
+            else if (file1 != NULL && file == NULL) { // data -f ada data -o ga ada
+                readconfdata(apps, &numApps);
+                killApps(apps, numApps);
+                fclose(file1);
+                remove("app_dataf.txt");
+            }
+
+            else { // data -f ada data -o juga ada
+                
+                fclose(file);
+                fclose(file1);
+                fclose(file2);
+                remove("app_data.txt");
+                remove("app_dataf.txt");
+                remove("combine.txt");
+            }
+
+        } else if (argc == 3) { // ./setup -k file.conf
+                readconfdata(apps, &numApps); 
+                killApps(apps, numApps);
+                remove("app_dataf.txt");
+        } else {
+            printf("Invalid option\n");
+            return 1;
+        }
+    }
+    return 0;
+}
+```
+
+- command `-o`
+    - jika `argc < 4 || argc % 2 != 0` maka program tidak akan berjalan karena argumen perintah belum sesuai dengan arahan yang diberikan
+    - jika argumen sesuai, variabel `numApps` akan dikalkulasi berdasarkan jumlah argumen setelah opsi **`-o`**
+    - melakukan `for` loop untuk menentukan `app[i].name` , `app[i].numWindows` dari argv
+    - `openApps(apps, numApps);` untuk membuka aplikasi dengan jumlah windowsnya sesuai dengan yang diberikan argumen
+    - `saveDataToFile(apps, numApps);` untuk menyimpan PID dari setiap windows yang dibuka
+- command `-f`
+    - jika `argc != 3` maka program tidak dapat dijalankan karena argumen tidak sesuai dengan arahan yang diberikan
+    - memeriksa apakah app_data.txt telah tersedia apa belum, jika belum program akan memanggil  fungsi `openAppsFromFile(argv[2],apps, &numApps);` dan `saveDataFToFile(apps, numApps);` namun jika file app_data.txt sudah tersedia program akan menjalankan fungsi seperti kondisi sebelumnya dan `mergepid("app_data.txt", "app_dataf.txt", "combine.txt");` untuk menggabungkan PID dari windows yang telah dibuka dari `-o` dan `-f`
+- command `-k`
+    - jika `argc == 2` maka program akan mengkill semua PID windows yang telah dibuka
+        - jika PID dari `-o` dan `-f` tidak tersedia, program akan mengeluarkan output error dan `return 1`
+        - jika PID dari `-o` tersedia dan `-f` tidak tersedia, program akan menjalankan fungsi  `readOdata(apps, &numApps);` dan `killApps(apps, numApps);` kemudian menghapus file app_data.txt
+        - jika PID dari `-o` tidak tersedia dan `-f` tersedia, program akan menjalankan fungsi `readconfdata(apps, &numApps);` dan `killApps(apps, numApps);` kemudian menghapus file app_dataf.txt
+        - jika PID dari `-o` tersedia dan `-f` tersedia, program akan menjalankan fungsi `killAllpid("combine.txt");` kemudian menghapus file semua file.txt yang tersedia
+    - jika `argc == 3` maka program akan mengkill PID process yang dibuka dari file.conf dengan memanggil fungsi `readconfdata(apps, &numApps);` dan `killApps(apps, numApps);` kemudian menghapus app_dataf.txt
+
+```c
+void openApps(struct App apps[], int numApps) {
+    for (int i = 0; i < numApps; i++) {
+        printf("Opening %d windows of %s\n", apps[i].numWindows, apps[i].name);
+        apps[i].numPid = 0;
+        for (int j = 0; j < apps[i].numWindows; j++) {
+            pid_t pid = fork();
+            if () {
+                execlp("open", "open", "-n", "-a", apps[i].name, NULL);
+                perror("execlp");
+                exit(EXIT_FAILURE);
+            } else if (pid > 0) {
+                int status;
+                pid_t childPid = waitpid(pid, &status, 0);
+                if (childPid > 0) {
+                    apps[i].pid[apps[i].numPid++] = childPid;
+                    printf("PID = %d\n", childPid);
+                } else {
+                    perror("waitpid");
+                }
+            } else {
+                perror("fork");
+            }
+        }
+    }
+}
+```
+
+Fungsi **`openApps`** bertujuan untuk membuka aplikasi-aplikasi yang telah ditentukan sejumlah windownya dan menyimpan PID dari setiap proses yang dibuka ke dalam  `struct App` 
+
+- fungsi menggunakan **`fork()`** untuk membuat proses baru untuk membuka aplikasi.
+    - Jika `pid == 0` artinya proses baru (child process) berhasil dibuat. Pada child process ini, fungsi menggunakan **`execlp()`** untuk menjalankan perintah **`open -n -a <nama_aplikasi>`** di terminal. Opsi **`-n`** menandakan bahwa aplikasi akan dibuka dalam satu instance yang baru, sedangkan **`-a`** diikuti dengan nama aplikasi yang akan dibuka
+    - `pid > 0` artinya ini adalah parent process. Parent process menunggu child process selesai menggunakan **`waitpid()`** untuk mendapatkan PID child process yang selesai
+        - `childPid > 0` artinya proses child telah selesai. PID child tersebut disimpan ke dalam array **`pid`** pada struktur **`App`** menggunakan **`apps[i].pid[apps[i].numPid++]`**.
+    - `pid < 0` artinya `fork()` gagal berjalan
+
+```c
+void saveDataToFile(const struct App apps[], int numApps) {
+    FILE *file = fopen("app_data.txt", "w");
+    if (file == NULL) {
+        printf("Failed to open file\n");
+        return;
+    }
+    fprintf(file, "%d\n", numApps);
+    for (int i = 0; i < numApps; i++) {
+        for (int j = 0; j < apps[i].numPid; j++) {
+            fprintf(file, "%d\n", apps[i].pid[j]);
+        }
+    }
+    fclose(file);
+}
+```
+
+Fungsi `saveDataToFile()` berguna untuk menyimpan PID dari setiap windows yang dibuka dari command `-o` 
+
+```c
+void openAppsFromFile(const char *filename, struct App apps[], int *numApps) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        printf("Failed to open file\n");
+        return;
+    }
+
+    char line[100];
+    while (fgets(line, sizeof(line), file) != NULL) {
+        line[strcspn(line, "\n")] = '\0';
+
+        char *appName = strtok(line, " ");
+        char *numWindowsStr = strtok(NULL, " ");
+
+        if (appName != NULL && numWindowsStr != NULL) {
+            strcpy(apps[*numApps].name, appName);
+            apps[*numApps].numWindows = atoi(numWindowsStr);
+            apps[*numApps].numPid = 0;
+            (*numApps)++;
+        }
+    }
+
+    fclose(file);
+
+    openApps(apps, *numApps);
+    saveDataFToFile(apps, *numApps); // simpan data ke file app_dataf.txt
+}
+```
+
+Fungsi `openAppsFromFile()` berguna untuk membuka aplikasi dari file.conf
+
+- program akan melakukan `while` loop untuk membaca nama aplikasi dan jumlah windows dari setiap aplikasi dan memasukkannya ke dalam variabel `struct app`
+- `openApps()` akan membuka aplikasi beserta jumlah windowsnya dengan data yang telah didapatkan dari `while` loop sebelumnya
+- `saveDataFToFile()` akan menyimpan PID setiap windowsnya ke dalam file app_dataf.txt
+
+```c
+void saveDataFToFile(const struct App apps[], int numApps) {
+    FILE *file = fopen("app_dataf.txt", "w");
+    if (file == NULL) {
+        printf("Failed to open file\n");
+        return;
+    }
+    fprintf(file, "%d\n", numApps);
+    for (int i = 0; i < numApps; i++) {
+        for (int j = 0; j < apps[i].numPid; j++) {
+            fprintf(file, "%d\n", apps[i].pid[j]);
+        }
+    }
+    fclose(file);
+}
+```
+
+Fungsi `saveDataFToFile()` berguna untuk menyimpan PID dari setiap windows yang dibuka dari command `-f` 
+
+```c
+void mergepid(const char* srcFilename1, const char* srcFilename2, const char* destFilename) {
+    FILE *src1 = fopen(srcFilename1, "r");
+    FILE *src2 = fopen(srcFilename2, "r");
+    if (!src1 || !src2) {
+        perror("Failed to open source files");
+        if (src1) fclose(src1);
+        if (src2) fclose(src2);
+        return;
+    }
+
+    FILE *dest = fopen(destFilename, "w"); 
+    if (!dest) {
+        perror("Failed to open destination file");
+        fclose(src1);
+        fclose(src2);
+        return;
+    }
+
+    int pid, numApps;
+    fscanf(src1, "%d", &numApps);  
+    while (fscanf(src1, "%d", &pid) == 1) {
+        fprintf(dest, "%d\n", pid);
+    }
+    fscanf(src2, "%d", &numApps);  
+    while (fscanf(src2, "%d", &pid) == 1) {
+        fprintf(dest, "%d\n", pid);
+    }
+
+    fclose(src1);
+    fclose(src2);
+    fclose(dest);
+}
+
+```
+
+Fungsi `mergepid()` digunakan jika telah menjalankan command `-o` dan `-f` sebelumnya. Fungsi ini akan menggabungkan PID yang ada pada masing-masing file.txt ke dalam file yang bernama combine.txt
+
+```c
+void readOData(struct App apps[], int *numApps) {
+    FILE *file = fopen("app_data.txt", "r");
+    if (file == NULL) {
+        printf("Failed to open file\n");
+        return;
+    }
+    fscanf(file, "%d", numApps);
+    for (int i = 0; i < *numApps; i++) {
+        apps[i].numPid = 0;
+        fscanf(file, "%d", &apps[i].numPid);
+        for (int j = 0; j < apps[i].numPid; j++) {
+            fscanf(file, "%d", &apps[i].pid[j]);
+        }
+    }
+    fclose(file);
+}
+```
+
+Fungsi `readOData()` digunakan untuk membaca file app_data.txt yang menyimpan PID yang telah disimpan dari command `-o` 
+
+```c
+void readconfdata(struct App apps[], int *numApps) {
+    FILE *file = fopen("app_dataf.txt", "r");
+    if (file == NULL) {
+        printf("Failed to open file\n");
+        return;
+    }
+    fscanf(file, "%d", numApps);
+    for (int i = 0; i < *numApps; i++) {
+        apps[i].numPid = 0;
+        fscanf(file, "%d", &apps[i].numPid);
+        for (int j = 0; j < apps[i].numPid; j++) {
+            fscanf(file, "%d", &apps[i].pid[j]);
+        }
+    }
+    fclose(file);
+}
+```
+
+Fungsi `readconfData()` digunakan untuk membaca file app_data.txt yang menyimpan PID yang telah disimpan dari command `-f` 
+
+```c
+void killApps(struct App apps[], int numApps) {
+    for (int i = 0; i < numApps; i++) {
+        for (int j = 0; j < apps[i].numPid; j++) {
+            printf("Killing process %d...\n", apps[i].pid[j]);
+            int result = kill(apps[i].pid[j]+1, SIGTERM);
+            if (result == 0) {
+                printf("Process %d terminated successfully\n", apps[i].pid[j]);
+            } else {
+                printf("Failed to terminate process %d\n", apps[i].pid[j]);
+            }
+        }
+    }
+}
+```
+
+Fungsi **`killApps`** bertujuan untuk menghentikan semua proses yang telah dibuka sebelumnya dengan mematikan setiap proses yang terkait dengan aplikasi-aplikasi yang disimpan dalam `struct app` 
+
+```c
+void killAllpid(const char* filename) {
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        perror("Failed to open file to read PIDs");
+        return;
+    }
+
+    int pid;
+    while (fscanf(file, "%d", &pid) == 1) {
+        if (pid > 0) {
+            printf("Killing process %d...\n", pid);
+            int result = kill(pid + 1, SIGTERM);
+            if (result == 0) {
+                printf("Process %d terminated successfully.\n", pid);
+            } else {
+                perror("Failed to terminate process");
+            }
+        }
+    }
+    fclose(file);
+}
+```
+
+Fungsi `killAllpid()` digunakan untuk mengkill semua PID yang berada di dalam file yang berisikan PID gabungan dari aplikasi yang dibuka melalui command `-o` dan `-f` 
+
+### Errors
+
+command `-k` tidak berhasil berjalan karena nilai dari `numApps` tidak tersimpan dari eksekusi program sebelumnya. Solusi: masukkan nilai `numApps` ke file.txt
+
+![image](https://github.com/DzakyAhnaf/Sisop-2-2024-MH-IT12/assets/164857172/4f6c2510-6353-4870-b6c8-b056c778e60c)
+
+command `-k` tidak berhasil kill PID yang berada dari 2 data file jika fungsinya seperti ini. Solusi: gabungkan isi dari 2 file berisi PID lalu kill isi dari file gabungan tersebut.
+
+![image](https://github.com/DzakyAhnaf/Sisop-2-2024-MH-IT12/assets/164857172/b31e1abf-dd5a-4109-bdb2-d591f1ebb85c)
