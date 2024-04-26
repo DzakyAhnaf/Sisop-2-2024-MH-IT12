@@ -9,12 +9,10 @@
 #include <fcntl.h>
 #include <time.h>
 
-
-//biar konsisten tidak dapat diinterupsi
 volatile sig_atomic_t current_status = 0;  // 0 JALAN 1 GAGAL
 
 void start_daemon();
-void monitoring(const char *user);
+void monitoring(const char *user, int kill_process);
 void log_activity(const char* user, const char* pid, const char* process_name, const char* status);
 void save_pid();
 void stop_daemon(const char* user);
@@ -27,12 +25,13 @@ int main(int argc, char *argv[]) {
     }
 
     const char* user = argv[2];
-    const char* status_file = "/home/vagrant/status_file"; 
+    int kill_process = 0;
+    const char* status_file = "/Users/tarisa/smt-2/sisop/soal4/status_file"; 
 
     if (strcmp(argv[1], "-m") == 0) {
         start_daemon();
         save_pid();
-        monitoring(user);
+        monitoring(user, kill_process);
     } else if (strcmp(argv[1], "-s") == 0) {
         stop_daemon(user);
     } else if (strcmp(argv[1], "-c") == 0) {
@@ -41,12 +40,19 @@ int main(int argc, char *argv[]) {
             fprintf(file, "1"); // GAGAL
             fclose(file);
         }
+        kill_process = 1;
+        start_daemon();
+        save_pid();
+        monitoring(user, kill_process);
     } else if (strcmp(argv[1], "-a") == 0) {
         FILE* file = fopen(status_file, "w");
         if (file) {
             fprintf(file, "0"); // JALAN
             fclose(file);
         }
+        start_daemon();
+        save_pid();
+        monitoring(user, kill_process);
     }
 
     closelog();
@@ -67,7 +73,7 @@ void start_daemon() {
     if (setsid() < 0) {
         exit(EXIT_FAILURE);
     }
-    if (chdir("/home/vagrant/shift2") < 0) { 
+    if (chdir("/Users/tarisa/smt-2/sisop/soal4") < 0) { 
         exit(EXIT_FAILURE);
     }
 
@@ -76,26 +82,37 @@ void start_daemon() {
     close(STDERR_FILENO);
 }
 
-void monitoring(const char *user) {
-    const char* status_file = "/home/vagrant/status_file"; 
+void monitoring(const char *user, int kill_process) {
+    const char* status_file = "/Users/tarisa/smt-2/sisop/soal4/status_file"; 
     while (1) {
-        update_status(status_file);  // Update current status dari file
+        update_status(status_file);  // Update current status from file
         char command[256];
-        sprintf(command, "ps -u %s -o pid,comm", user);
+        snprintf(command, sizeof(command), "ps -u %s -o pid,comm | awk 'NR>1 {print $1, $2}'", user);
         FILE *fp = popen(command, "r");
         if (!fp) {
             syslog(LOG_ERR, "Failed to run command.\n");
             exit(1);
         }
 
-        char buffer[1024];
-        fgets(buffer, sizeof(buffer), fp);  
+        char pid[32]; // Menyimpan PID sebagai string
+        char process_name[256]; // Menyimpan nama proses sebagai string
+        char log_filename[100];
         char *status = current_status ? "GAGAL" : "JALAN";
-        while (fgets(buffer, sizeof(buffer), fp) != NULL) {
-            char *pid = strtok(buffer, " ");
-            char *process_name = strtok(NULL, "\n");
-            if (pid && process_name) {
-                log_activity(user, pid, process_name, status);
+        while (fscanf(fp, "%s %s", pid, process_name) != EOF) {
+            log_activity(user, pid, process_name, status);
+            snprintf(log_filename, sizeof(log_filename), "%s.log", user);
+            FILE *log_file = fopen(log_filename, "a");
+            if (log_file == NULL) {
+                perror("Failed to open log file");
+                exit(EXIT_FAILURE);
+            }
+            if (kill_process == 1) {
+                int res = kill(atoi(pid), SIGTERM);
+                if (res != 0) {
+                    perror("kill");
+                    fprintf(log_file, "GAGAL KILL SI %d-%s_\n", atoi(pid), process_name);
+                    exit(EXIT_FAILURE);
+                } 
             }
         }
 
@@ -105,9 +122,9 @@ void monitoring(const char *user) {
 }
 
 void update_status(const char *status_file) {
-    FILE* f = fopen(status_file, "r"); // baca status_file
+    FILE* f = fopen(status_file, "r");
     if (f) {
-        fscanf(f, "%d", &current_status);  // nilai current_status == nilai dalem file status_file
+        fscanf(f, "%d", &current_status);
         fclose(f);
     }
 }
@@ -131,12 +148,12 @@ void log_activity(const char* user, const char* pid, const char* process_name, c
 }
 
 void save_pid() {
-    FILE* file = fopen("admin.pid", "w");
+    FILE* file = fopen("admin.pid", "a");
     if (file == NULL) {
-        syslog(LOG_ERR, "Failed to write PID file.\n");
+        perror("Failed to write PID file.\n");
         exit(EXIT_FAILURE);
     }
-    fprintf(file, "%d", getpid());
+    fprintf(file, "%d\n", getpid());
     fclose(file);
 }
 
@@ -149,11 +166,12 @@ void stop_daemon(const char* user) {
         return;
     }
     int pid;
-    fscanf(file, "%d", &pid);
-    fclose(file);
-    if (pid > 0) {
-        kill(pid, SIGTERM);
-        remove("admin.pid");  // hapus file pid
-        remove(filename);  // hapus file log
+    while (fscanf(file, "%d", &pid) != EOF) { // Loop sampai EOF untuk membaca semua PID
+        kill(pid, SIGTERM); // Mengirim sinyal SIGTERM ke PID
     }
+    fclose(file);
+
+    remove("admin.pid");  // hapus file pid
+    remove(filename);  // hapus file log
+    remove("status_file");
 }
