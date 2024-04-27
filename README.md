@@ -595,10 +595,17 @@ int main(int argc, char *argv[]) {
 
 ---
 
-1. ```char default```
-2. Fungsi ```daemonize```
-3. Fungsi
-4. Fungsi
+1. ```char mode[10] = "default";``` :
+2. Fungsi ```void run_as_daemon() {``` : untuk menjalankan program sebagai daemon
+3. Fungsi ```void downloadFile(const char *url, const char *output_path) {``` : untuk mendownload file zip 
+4. Fungsi ```void unzipFile(const char *zip_file, const char *output_dir) {``` : untuk mengunzip atau mengekstrak file zip
+5. Fungsi ```void dekripsi_rot19(char *str) {```
+6. Fungsi ```void rename_file(char *filename) {``` : untuk merename file yang sudah di unzip dengan nama yang memuat kode d3Let3, hapus file tersebut. Sementara itu, untuk setiap file dengan nama yang memuat kode r3N4mE.
+7. Fungsi ```
+void backup_file(char *filename) {```
+8. Fungsi ```void restore_file(char *filename) {```
+9. Fungsi ```void handle_signal(int sig) {```
+10. Fungsi ```int main(int argc, char *argv[]) {```
 
 
 ## Soal 3
