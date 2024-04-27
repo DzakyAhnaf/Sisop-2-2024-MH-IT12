@@ -659,7 +659,6 @@ void process_files() {
 ### Kendala
 
 - Kode masih belum tertuntaskan sampai selesai
-- Untuk kode poin C tidak bisa berjalan sempurna
 
 ### Dokumentasi Hasil Program 
 
