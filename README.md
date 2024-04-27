@@ -595,7 +595,7 @@ int main(int argc, char *argv[]) {
 
 ---
 
-1. ```char mode[10] = "default";``` :
+1. ```char mode[10] = "default";``` : untuk menyimpan mode kerja program dalam default
 2. Fungsi ```void run_as_daemon() {``` : untuk menjalankan program sebagai daemon
 3. Fungsi ```void downloadFile(const char *url, const char *output_path) {``` : untuk mendownload file zip dari URL yang diberikan 
 4. Fungsi ```void unzipFile(const char *zip_file, const char *output_dir) {``` : untuk mengunzip atau mengekstrak file zip ke direktori yang ditentukan
@@ -616,11 +616,50 @@ void backup_file(char *filename) {``` : untuk membuat salinan file ke direktori 
     - Penutupan direktori setelah selesai pemindaian.Pengembalian nilai 0 untuk menunjukkan bahwa program telah berakhir dengan sukses.
 
 ### Revisi
+- Menambahkan fungsi ```process_file``` untuk memproses file sesuai dengan mode yang telah ditentukan. Mode yang dipilih diambil dari argumen yang diberikan pada program, kemudian diproses sesuai dengan permintaan, baik itu untuk default, backup, atau restore.
+```c
+void process_files() {
+    DIR *dir;
+    struct dirent *entry;
+
+    dir = opendir(".");
+    if (dir == NULL) {
+        perror("opendir");
+        exit(EXIT_FAILURE);
+    }
+
+    while ((entry = readdir(dir)) != NULL) {
+        char filename[256];
+        strcpy(filename, entry->d_name);
+
+        if (strcmp(mode, "backup") == 0) {
+            if (strstr(filename, "m0V3") != NULL) {
+                backup_file(entry->d_name);
+            }
+        } else if (strcmp(mode, "restore") == 0) {
+            if (strstr(filename, "m0V3") != NULL) {
+                restore_file(entry->d_name);
+            }
+        } else {
+            if (strstr(filename, "d3Let3") != NULL) {
+                remove(entry->d_name);
+            } else if (strstr(filename, "r3N4mE") != NULL) {
+                rename_file(filename);
+            }
+
+            printf("%s\n", filename);
+        }
+    }
+
+    closedir(dir);
+}
+```
+
 
 ### Kendala
 
 - Kode masih belum tertuntaskan sampai selesai
-- Tidak bisa mem-backup file
+- Untuk kode poin C tidak bisa berjalan sempurna
 
 ### Dokumentasi Hasil Program 
 
