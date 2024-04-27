@@ -597,9 +597,9 @@ int main(int argc, char *argv[]) {
 
 1. ```char mode[10] = "default";``` : untuk menyimpan mode kerja program dalam default
 2. Fungsi ```void run_as_daemon() {``` : untuk menjalankan program sebagai daemon
-3. Fungsi ```void downloadFile(const char *url, const char *output_path) {``` : untuk mendownload file zip dari URL yang diberikan 
+3. Fungsi ```void downloadFile(const char *url, const char *output_path) {``` : untuk mendownload file zip dari URL yang diberikan.
 4. Fungsi ```void unzipFile(const char *zip_file, const char *output_dir) {``` : untuk mengunzip atau mengekstrak file zip ke direktori yang ditentukan
-5. Fungsi ```void dekripsi_rot19(char *str) {``` : untuk melakukan dekripsi terhadap nama file ke-7 hingga terakhir menggunakan algoritma ROT19
+5. Fungsi ```void dekripsi_rot19(char *str) {``` : untuk melakukan dekripsi terhadap nama file ke-7 hingga terakhir menggunakan algoritma ROT19. Jika karakter adalah huruf kecil dan berada dalam rentang 'a' hingga 's' dalam alfabet, maka karakter tersebut digeser sebanyak 19 posisi ke kanan. Ini dilakukan dengan menambahkan 19 ke nilai ASCII karakter tersebut.Jika karakter adalah huruf kecil dan berada dalam rentang 't' hingga 'z' dalam alfabet, maka karakter tersebut digeser sebanyak 7 posisi ke kiri. Ini dilakukan dengan mengurangkan 7 dari nilai ASCII karakter tersebut.Karakter-karakter selain huruf kecil tidak diubah.Setelah semua karakter dalam string didekripsi, string tersebut akan tetap terdekripsi dalam variabel yang sama.
 6. Fungsi ```void rename_file(char *filename) {``` : untuk merename file yang sudah di unzip dengan nama yang memuat kode d3Let3, hapus file tersebut. Sementara itu, untuk setiap file dengan nama yang memuat kode r3N4mE.
 7. Fungsi ```
 void backup_file(char *filename) {``` : untuk membuat salinan file ke direktori backup.
@@ -616,7 +616,7 @@ void backup_file(char *filename) {``` : untuk membuat salinan file ke direktori 
     - Penutupan direktori setelah selesai pemindaian.Pengembalian nilai 0 untuk menunjukkan bahwa program telah berakhir dengan sukses.
 
 ### Revisi
-- Menambahkan fungsi ```process_file``` untuk memproses file sesuai dengan mode yang telah ditentukan. Mode yang dipilih diambil dari argumen yang diberikan pada program, kemudian diproses sesuai dengan permintaan, baik itu untuk default, backup, atau restore.
+- Penambahan kode fungsi ```process_file``` untuk memproses file sesuai dengan mode yang telah ditentukan. Mode yang dipilih diambil dari argumen yang diberikan pada program, kemudian diproses sesuai dengan permintaan, baik itu untuk default, backup, atau restore.
 ```c
 void process_files() {
     DIR *dir;
