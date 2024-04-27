@@ -597,15 +597,35 @@ int main(int argc, char *argv[]) {
 
 1. ```char mode[10] = "default";``` :
 2. Fungsi ```void run_as_daemon() {``` : untuk menjalankan program sebagai daemon
-3. Fungsi ```void downloadFile(const char *url, const char *output_path) {``` : untuk mendownload file zip 
-4. Fungsi ```void unzipFile(const char *zip_file, const char *output_dir) {``` : untuk mengunzip atau mengekstrak file zip
-5. Fungsi ```void dekripsi_rot19(char *str) {```
+3. Fungsi ```void downloadFile(const char *url, const char *output_path) {``` : untuk mendownload file zip dari URL yang diberikan 
+4. Fungsi ```void unzipFile(const char *zip_file, const char *output_dir) {``` : untuk mengunzip atau mengekstrak file zip ke direktori yang ditentukan
+5. Fungsi ```void dekripsi_rot19(char *str) {``` : untuk melakukan dekripsi terhadap nama file ke-7 hingga terakhir menggunakan algoritma ROT19
 6. Fungsi ```void rename_file(char *filename) {``` : untuk merename file yang sudah di unzip dengan nama yang memuat kode d3Let3, hapus file tersebut. Sementara itu, untuk setiap file dengan nama yang memuat kode r3N4mE.
 7. Fungsi ```
-void backup_file(char *filename) {```
-8. Fungsi ```void restore_file(char *filename) {```
-9. Fungsi ```void handle_signal(int sig) {```
-10. Fungsi ```int main(int argc, char *argv[]) {```
+void backup_file(char *filename) {``` : untuk membuat salinan file ke direktori backup.
+8. Fungsi ```void restore_file(char *filename) {``` : untuk mengembalikan file dari direktori backup
+10. Fungsi ```void handle_signal(int sig) {``` : menangani sinyal untuk mengatur mode kerja program.
+11. Fungsi ```int main(int argc, char *argv[]) {``` :
+    - Deklarasi dan inisialisasi variabel-variabel yang diperlukan, seperti download_url, zip_file, dan output_dir.
+    - Panggilan fungsi downloadFile(download_url, zip_file): Untuk mengunduh file dari URL yang telah ditentukan dan menyimpannya di lokasi yang ditentukan.
+    - Panggilan fungsi unzipFile(zip_file, output_dir): Untuk mengekstrak file ZIP yang telah diunduh ke direktori output yang telah ditentukan.
+    - Panggilan fungsi run_as_daemon(): Untuk menjalankan program sebagai daemon, menjauhkan diri dari terminal utama.
+    - Penanganan sinyal dengan fungsi signal(SIGRTMIN, handle_signal), signal(SIGUSR1, handle_signal), dan signal(SIGUSR2, handle_signal): Untuk menetapkan fungsi penangan sinyal yang sesuai saat sinyal tertentu diterima.
+    - Pemeriksaan argumen baris perintah: Untuk menentukan mode kerja program berdasarkan argumen yang diberikan. Jika argumen adalah -m, maka mode akan diatur sesuai dengan argumen berikutnya. Jika argumen tidak valid, program akan menampilkan pesan kesalahan.
+    - Pemindaian direktori saat ini: Untuk memproses file-file dalam direktori saat ini. Program akan membuka direktori, membaca setiap entri, dan memproses file dengan memanggil fungsi-fungsi tertentu berdasarkan mode kerja yang telah ditetapkan.
+    - Penutupan direktori setelah selesai pemindaian.Pengembalian nilai 0 untuk menunjukkan bahwa program telah berakhir dengan sukses.
+
+### Revisi
+
+### Kendala
+
+- Kode masih belum tertuntaskan sampai selesai
+- Tidak bisa mem-backup file
+
+### Dokumentasi Hasil Program 
+
+---
+
 
 
 ## Soal 3
