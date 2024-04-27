@@ -589,6 +589,18 @@ int main(int argc, char *argv[]) {
 }
 
 ```
+---
+
+### Penjelasan
+
+---
+
+1. ```char default```
+2. Fungsi ```daemonize```
+3. Fungsi
+4. Fungsi
+
+
 ## Soal 3
 
 Dikerjakan oleh Adlya Isriena Aftarisya (5027231066)
