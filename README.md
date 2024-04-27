@@ -626,6 +626,12 @@ void backup_file(char *filename) {``` : untuk membuat salinan file ke direktori 
 
 ---
 
+- ![1000066834](https://github.com/DzakyAhnaf/Sisop-2-2024-MH-IT12/assets/151147728/070fdc3e-4704-4e5a-9bdf-394eafacd133)
+
+- ![1000066833](https://github.com/DzakyAhnaf/Sisop-2-2024-MH-IT12/assets/151147728/b47bbb0d-4b8f-4519-98da-488d82932012)
+- ![1000066830](https://github.com/DzakyAhnaf/Sisop-2-2024-MH-IT12/assets/151147728/19a444bc-363f-4825-b7a3-bc09aaee5540)
+- ![1000066831](https://github.com/DzakyAhnaf/Sisop-2-2024-MH-IT12/assets/151147728/84d24d69-e705-472d-96a1-b74c8a634960)
+
 
 
 ## Soal 3
